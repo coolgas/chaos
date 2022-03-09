@@ -1,6 +1,6 @@
 module Integer
 
-export integer_partition, integer_partition_redundant, hopping_pair
+export integer_partition, integer_partition_redundant, hopping_pair, average_spacing
 
 """
 This function will give partitions of m into at most n integers. Please notice
@@ -79,6 +79,17 @@ function hopping_pair(;m::Int64, Na::Int64, Hbs::Vector{Vector{Int64}})::Matrix{
         end
     end
     return H3s
+end
+
+function average_spacing(differences::Vector{Float64}, i::Int64, v::Int64)
+    drop_index = Int((v-1)/2)
+    @assert i-drop_index > 0
+    @assert i+drop_index <= length(differences)
+    sum = 0
+    for k in -drop_index:drop_index
+        sum += differences[i+k]
+    end
+    return sum/v
 end
 
 end
