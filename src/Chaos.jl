@@ -108,7 +108,7 @@ function state_evolution(;H::Matrix{Float64},t::Float64,basis::Vector{Vector{Int
     for i in 1:len
         vec = eigenvecs[:,i]
         val = eigenvals[i]
-        ψ_t += vec[ind]*exp(-im*val*t)*vec
+        ψ_t += conj(vec[ind])*exp(-im*val*t)*vec
     end
     return vec(ψ_t)
 end
