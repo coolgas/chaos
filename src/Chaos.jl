@@ -1,68 +1,40 @@
 module Chaos
 
 using LinearAlgebra
+using Combinatorics
 
-export integer_partition, integer_partition_redundant, hopping_pair, average_spacing, state_evolution, reduced_density_matrix
+export integer_partition, hopping_pair, average_spacing, state_evolution, reduced_density_matrix
 
 """
-This function will give partitions of m into at most n integers. Please notice
-that this function will give us redundant partition.
+This function will give partitions of m into at most n integers.
 """
-function integer_partition_redundant(m::Int, n::Int)
-    partitions = []
-
-    if n == 2
-        if m != 0
-            for i::Int in 1:m
-                append!(partitions, [[i, m-i]])
-            end
-        else
-            append!(partitions, [[0,0]])
-        end
+function integer_partition(;N::Int64, L::Int64)
+    @assert typeof(N) == Int64 && typeof(L) == Int64
+    @assert N != 0 && L != 0
+    all_ps = Vector{Int64}[]
+    equ_len_ps = Vector{Int64}[] # this list hold all the equal length partitions 
+    for i in 1:L
+        ps = partitions(N, i)
+        for p in ps
+            push!(all_ps, p)
+        end         
     end
-
-    if n > 2
-        for i ::Int in 1:m
-            for pair in integer_partition_redundant(m-i, n-1)
-                to_be_appended = [pushfirst!(pair, i)]
-                append!(partitions, to_be_appended)
-            end
-        end
-    end
-   return partitions
-end
-
-"""
-Like the redundant version, this function will instead produce non-redundant
-partitions.
-"""
-function integer_partition(m::Int, n::Int)::Vector{Vector{Int64}}
-    partitions = []
-    partitions_set = []
-    partitions_redundant = integer_partition_redundant(m,n)
     
-    for partition in partitions_redundant
-        partition_set = Set(partition)
-        append!(partitions_set, [partition_set])
-    end
-
-    partitions_set = Set(partitions_set)
-    
-    d = Dict() # this dict stores the occurance of each set
-    for set in partitions_set
-        get!(d, set, 0)
-    end
-
-    for partition in partitions_redundant
-        set = Set(partition)
-        if d[set] == 0
-            append!(partitions, [partition])
-            d[set] += 1
+    for p in all_ps
+        if length(p) == L
+            push!(equ_len_ps, p)
         else
-            continue
+            p_mod = append!(p, zeros(Int64, 1, L-length(p)))
+            push!(equ_len_ps, p_mod)
         end
     end
-    return partitions
+    
+    Hbs = Vector{Int64}[]
+    for p in equ_len_ps
+        append!(Hbs, collect(multiset_permutations(p, L)))
+    end
+    
+    return Hbs
 end
 
 """
