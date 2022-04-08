@@ -3,7 +3,7 @@ module Chaos
 using LinearAlgebra
 using Combinatorics
 
-export integer_partition, hopping_pair, average_spacing, state_evolution, reduced_density_matrix
+export integer_partition, hopping_pair, average_spacing, state_evolution, reduced_density_matrix, reduced_density_matrix_3sites
 
 """
 This function will give partitions of m into at most n integers.
@@ -34,7 +34,14 @@ function integer_partition(;N::Int64, L::Int64)
         append!(Hbs, collect(multiset_permutations(p, L)))
     end
     
-    return Hbs
+    Hbs_arranged = [Vector{Int64}[] for i in 1:N+1]
+    indices = [i for i in 0:N]
+    for vec in Hbs
+        ind = findall(x->x==vec[1], indices)[1]
+        push!(Hbs_arranged[ind], vec)
+    end
+
+    return vcat(Hbs_arranged...)
 end
 
 """
@@ -86,40 +93,20 @@ function state_evolution(;H::Matrix{Float64},t::Float64,basis::Vector{Vector{Int
 end
 
 """
-This function calculates the reduced_density_matrix by tracing out
-subsystem B. Here Na is the number of atoms. Notice that this function
-only works in 3-site system.
+This function will calculate the reduced_density_matrix by integrate 'int_rank' out
+of the density matrix contructed from the state. Noticed that this function only
+considers the bipartite system AB and only taking trace with respect to B.
 """
-function reduced_density_matrix(;state::Vector{T}, Na::Int64) where T <: Number
+function reduced_density_matrix(;state::Array{T,1}, int_rank::Int) where T <: Number
     N = length(state)
-    
-    rd_rank = 0
-    int_rank = 0
+    @assert N % 2 == 0
+    @assert int_rank % 2 == 0
+    @assert N % int_rank == 0
 
-    rank1 = Na+1
-    rank2 = N/(Na+1)
-
-    if rank1 > rank2
-        int_rank = rank2
-        rd_rank = rank1
-    else
-        int_rank = rank1
-        rd_rank = rank2
-    end
-
-    rd_rank = Int(rd_rank)
-    int_rank = Int(int_rank)
-
+    rd_rank = Int(N / int_rank) # the output rank.
     d_mat = state * state' # constructing the density matrix.
     
-    if typeof(state[1]) == Float64
-        traces = Array{Float64}(undef, 1, rd_rank*rd_rank)
-    else
-        traces = Array{Complex}(undef, 1, rd_rank*rd_rank)
-    end 
-    #traces = Array{Float64}(undef, 1, rd_rank*rd_rank)
-    #traces = Array{Number}(undef, 1, rd_rank*rd_ran)
-
+    traces = Array{Float64}(undef, 1, rd_rank*rd_rank)
     i = 1
     for j in 1:int_rank:N
         for k in 1:int_rank:N
@@ -129,7 +116,7 @@ function reduced_density_matrix(;state::Vector{T}, Na::Int64) where T <: Number
     end
 
     rd_mat = reshape(traces,(rd_rank, rd_rank))
-    return transpose(rd_mat)
+    return rd_mat'
 end
 
 
