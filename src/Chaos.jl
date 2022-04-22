@@ -3,7 +3,7 @@ module Chaos
 using LinearAlgebra
 using Combinatorics
 
-export integer_partition, hopping_pair, average_spacing, state_evolution, reduced_density_matrix, reduced_density_matrix_3sites
+export integer_partition, hopping_pair, average_spacing, state_evolution, state_evolution_random, reduced_density_matrix
 
 """
 This function will give partitions of m into at most n integers.
@@ -92,31 +92,60 @@ function state_evolution(;H::Matrix{Float64},t::Float64,basis::Vector{Vector{Int
     return vec(ψ_t)
 end
 
-"""
-This function will calculate the reduced_density_matrix by integrate 'int_rank' out
-of the density matrix contructed from the state. Noticed that this function only
-considers the bipartite system AB and only taking trace with respect to B.
-"""
-function reduced_density_matrix(;state::Array{T,1}, int_rank::Int) where T <: Number
-    N = length(state)
-    @assert N % 2 == 0
-    @assert int_rank % 2 == 0
-    @assert N % int_rank == 0
+function state_evolution_random(;H::Matrix{Float64},t::Float64,basis::Vector{Vector{Int64}},init::Vector{Float64})
+    eigenvals = eigvals(H)
+    eigenvecs = eigvecs(H)
+    len = length(eigenvals)
+    ψ_t = zeros(Float64, length(basis), 1)
+    for i in 1:len
+        vec = eigenvecs[:,i]
+        val = eigenvals[i]
+        α_i = vec'*init
+        ψ_t += α_i*exp(-im*val*t)*vec
+    end
+    return vec(ψ_t)
+end
 
-    rd_rank = Int(N / int_rank) # the output rank.
-    d_mat = state * state' # constructing the density matrix.
+
+# This function will integrate out the first "Rd" (stands for
+# reduced dimension) sites of the system.
+function reduced_density_matrix(;state::Vector{T}, Na::Int64, Ls::Int64, Rd::Int64) where T <: Number
+    @assert Na != 0 && Rd != 0
+    @assert Rd < Ls
+    sys_bs = integer_partition(N=Na, L=Ls) # the set of all basis of the system 
+    ind_lsts = Vector{Int64}[] # this set will be used to compute all non-zero elements of reduced density matrix
     
-    traces = Array{Float64}(undef, 1, rd_rank*rd_rank)
-    i = 1
-    for j in 1:int_rank:N
-        for k in 1:int_rank:N
-            traces[i] = tr(d_mat[j:j+int_rank-1, k:k+int_rank-1])
-            i += 1
+    # we first consider the case of zero particle
+    init = vec(zeros(Int64, 1, Rd))
+    ind_lst = findall(x->x[1:Rd]==init, sys_bs)
+    push!(ind_lsts, ind_lst)
+    
+    # we then come to consider all the remaining cases
+    for i in 1:Na
+        hbs = integer_partition(N=i, L=Rd)
+        for lst in hbs
+            ind_lst = findall(x->x[1:Rd]==lst, sys_bs)
+            push!(ind_lsts, ind_lst)
         end
     end
-
-    rd_mat = reshape(traces,(rd_rank, rd_rank))
-    return rd_mat'
+    
+    # below we compute the reduced density matrix
+    dmat = state*state'
+    len = length(state)
+    if typeof(state[1]) == Float64   
+        rdmat = zeros(Float64, len, len)
+    else
+        rdmat = zeros(Complex, len, len)
+    end
+    
+    for lst in ind_lsts
+        for i in lst
+            for j in lst
+                rdmat[i,j] = dmat[i,j]
+            end
+        end
+    end
+    return rdmat
 end
 
 
