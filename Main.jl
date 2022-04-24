@@ -237,3 +237,34 @@ end
 	println(aveEEs_newnew)
 end
 
+gs = [0 4 6 8 10]
+
+ee_dict1 = Dict(0=>evolEE0s, 4=>evolEE4s, 6=>evolEE6s, 8=>evolEE8s, 10=>evolEE10s)
+
+ee_dict2 = Dict(0=>evolEE0s_new, 4=>evolEE4s_new, 6=>evolEE6s_new, 8=>evolEE8s_new, 10=>evolEE10s_new)
+
+ee_dict3 = Dict(0=>evolEE0s_newnew, 4=>evolEE4s_newnew, 6=>evolEE6s_newnew, 8=>evolEE8s_newnew, 10=>evolEE10s_newnew)
+
+for g in gs
+    io = open("/Users/tianyiyan/Desktop/Chaos/data/ee_newnew/text$(g).txt", "w") do io
+        for x in ee_dict3[g]
+            println(io, x)
+        end
+    end
+end
+
+
+io = open("/Users/tianyiyan/Desktop/Chaos/data/aves/avee_new/aveEEs_new.txt", "w") do io
+    for x in aveEEs_new
+        println(io, x)
+    end
+end
+
+std_ee_new
+
+io = open("/Users/tianyiyan/Desktop/Chaos/data/aves/stdee_new/std_ee.txt", "w") do io
+    for x in std_ee_new
+        println(io, x)
+    end
+end
+
