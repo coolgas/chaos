@@ -164,7 +164,7 @@ H9 = Htot(γ=9.0, J=J, g=g, d=d, C6=C6, R=R);
 H10 = Htot(γ=10.0, J=J, g=g, d=d, C6=C6, R=R);
 
 # Initializing a bunch of things.
-ts = 0.0:0.2:10;
+ts = 0.0:0.05:6;
 gammas_new = 0.0:1:8
 ts1 = 0.0:0.2:5
 
@@ -254,16 +254,24 @@ for g in gs
 end
 
 
-io = open("/Users/tianyiyan/Desktop/Chaos/data/aves/avee_new/aveEEs_new.txt", "w") do io
-    for x in aveEEs_new
+io = open("/Users/tianyiyan/Desktop/Chaos/data/aves/avee_newnew/aveEEs_newnew.txt", "w") do io
+    for x in aveEEs_newnew
         println(io, x)
     end
 end
 
-std_ee_new
+std_ee_newnew
 
-io = open("/Users/tianyiyan/Desktop/Chaos/data/aves/stdee_new/std_ee.txt", "w") do io
-    for x in std_ee_new
+io = open("/Users/tianyiyan/Desktop/Chaos/data/aves/stdee_newnew/std_ee_newnew.txt", "w") do io
+    for x in std_ee_newnew
+        println(io, x)
+    end
+end
+
+evolEE10s
+
+io = open("/Users/tianyiyan/Desktop/Chaos/data/dense/ees/ee/text10.txt", "w") do io
+    for x in evolEE10s
         println(io, x)
     end
 end
