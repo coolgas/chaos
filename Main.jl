@@ -207,7 +207,7 @@ std_ee_newnew = zeros(Float64, 1, length(gammas_new))
 	drop_rate = 0.2 # we drop the first 20% of data
 	left_num = Int(floor(drop_rate*len))
 	aveEEs[i] = mean(evolEEs[left_num:len])
-	std_ee[i] = std(evolEEs[left_num:len])
+    std_ee[i] = std(log.(evolEEs[left_num:len]))
 	println(aveEEs)
 end
 
@@ -220,7 +220,7 @@ end
 	drop_rate = 0.2 # we drop the first 20% of data
 	left_num = Int(floor(drop_rate*len))
 	aveEEs_new[i] = mean(evolEEs[left_num:len])
-	std_ee_new[i] = std(evolEEs[left_num:len])
+    std_ee_new[i] = std(log.(evolEEs[left_num:len]))
 	println(aveEEs_new)
 end
 
@@ -233,7 +233,7 @@ end
 	drop_rate = 0.2 # we drop the first 20% of data
 	left_num = Int(floor(drop_rate*len))
 	aveEEs_newnew[i] = mean(evolEEs[left_num:len])
-	std_ee_newnew[i] = std(evolEEs[left_num:len])
+    std_ee_newnew[i] = std(log.(evolEEs[left_num:len]))
 	println(aveEEs_newnew)
 end
 
