@@ -3,7 +3,7 @@ module Chaos
 using LinearAlgebra
 using Combinatorics
 
-export integer_partition, hopping_pair, average_spacing, state_evolution, state_evolution_random, reduced_density_matrix
+export integer_partition, hopping_pair, average_spacing, state_evolution, state_evolution_random, reduced_density_matrix, evolution_number
 
 """
 This function will give partitions of m into at most n integers.
@@ -147,6 +147,54 @@ function reduced_density_matrix(;state::Vector{T}, Na::Int64, Ls::Int64, Rd::Int
     end
     return rdmat
 end
+
+"""
+This function will give the evolution of number of atoms at i-th site
+"""
+function evolution_number(;H::Matrix{Float64}, init::Vector{Int64}, basis::Vector{Vector{Int64}}, site::Int64, t::Float64)
+    num_site = length(basis[1])
+    @assert t != 0
+    @assert site >= 1 && site <= num_site
+    
+    vals = eigvals(H)
+    vecs = eigvecs(H)
+    
+    m = findall(x->x==init, basis)[1]
+    len_vals = length(vals)
+
+    n = 0 # This will be the expectation value of number of the site
+    for m′ in 1:len_vals
+        n_i = basis[m′][site]
+        prod_1 = 0
+        prod_2 = 0
+        for j in 1:len_vals
+            prod_1 += vecs[m,j]*exp(1im*vals[j]*t)*conj(vecs[m′,j])
+            prod_2 += vecs[m,j]*exp(-1im*vals[j]*t)*conj(vecs[m′,j])
+        end
+        n += prod_1*prod_2*n_i
+    end
+    
+    return n
+end
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 end
