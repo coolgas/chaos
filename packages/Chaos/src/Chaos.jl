@@ -92,7 +92,7 @@ function state_evolution(;H::Matrix{Float64},t::Float64,basis::Vector{Vector{Int
     return vec(ψ_t)
 end
 
-function state_evolution_random(;H::Matrix{Float64},t::Float64,basis::Vector{Vector{Int64}},init::Vector{Float64})
+function state_evolution_random(;H::Matrix{Float64},t::Float64,basis::Vector{Vector{Int64}},init::Vector{T}) where T <: Number
     eigenvals = eigvals(H)
     eigenvecs = eigvecs(H)
     len = length(eigenvals)
@@ -151,9 +151,8 @@ end
 """
 This function will give the evolution of number of atoms at i-th site
 """
-function evolution_number(;H::Matrix{Float64}, init::Vector{Int64}, basis::Vector{Vector{Int64}}, site::Int64, t::Float64)
+function evolution_number(;H::Matrix{Float64}, init::Vector{Int64}, basis::Vector{Vector{Int64}}, site::Int64, ts::Vector{Float64})
     num_site = length(basis[1])
-    @assert t != 0
     @assert site >= 1 && site <= num_site
     
     vals = eigvals(H)
@@ -161,20 +160,23 @@ function evolution_number(;H::Matrix{Float64}, init::Vector{Int64}, basis::Vecto
     
     m = findall(x->x==init, basis)[1]
     len_vals = length(vals)
-
-    n = 0 # This will be the expectation value of number of the site
-    for m′ in 1:len_vals
-        n_i = basis[m′][site]
-        prod_1 = 0
-        prod_2 = 0
-        for j in 1:len_vals
-            prod_1 += vecs[m,j]*exp(1im*vals[j]*t)*conj(vecs[m′,j])
-            prod_2 += vecs[m,j]*exp(-1im*vals[j]*t)*conj(vecs[m′,j])
-        end
-        n += prod_1*prod_2*n_i
-    end
     
-    return n
+    ns = Float64[]
+    for t in ts 
+        n = 0 # This will be the expectation value of number of the site
+        for m′ in 1:len_vals
+            n_i = basis[m′][site]
+            prod_1 = 0
+            prod_2 = 0
+            for j in 1:len_vals
+                prod_1 += vecs[m,j]*exp(1im*vals[j]*t)*conj(vecs[m′,j])
+                prod_2 += vecs[m,j]*exp(-1im*vals[j]*t)*conj(vecs[m′,j])
+            end
+            n += prod_1*prod_2*n_i
+        end
+        append!(ns, n)
+    end
+    return ns
 end
         
 
