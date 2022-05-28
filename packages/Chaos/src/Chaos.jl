@@ -3,7 +3,7 @@ module Chaos
 using LinearAlgebra
 using Combinatorics
 
-export integer_partition, hopping_pair, average_spacing, state_evolution, state_evolution_random, reduced_density_matrix, evolution_number
+export integer_partition, hopping_pair, hopping_pair_pbc, average_spacing, state_evolution, state_evolution_random, reduced_density_matrix, evolution_number
 
 """
 This function will give partitions of m into at most n integers.
@@ -45,7 +45,8 @@ function integer_partition(;N::Int64, L::Int64)
 end
 
 """
-Finding the Bosonic operator pair within hopping Hamiltonian
+Finding the Bosonic operator pair within hopping Hamiltonian.
+This is prepared for open boundary condition.
 """
 function hopping_pair(;m::Int64, Na::Int64, Hbs::Vector{Vector{Int64}})::Matrix{Float64}
     l = length(Hbs)
@@ -57,6 +58,35 @@ function hopping_pair(;m::Int64, Na::Int64, Hbs::Vector{Vector{Int64}})::Matrix{
             Hb_copy[m+1]::Int64 = Hbs[j][m+1] - 1
             index::Int64 = findfirst(item -> item == Hb_copy, Hbs)
             H3s[j, index] += sqrt((Hbs[j][m]+1)*Hbs[j][m+1])
+        end
+    end
+    return H3s
+end
+
+function hopping_pair_pbc(;m::Int64, Na::Int64, Hbs::Vector{Vector{Int64}})::Matrix{Float64}
+    l = length(Hbs)
+    ls = length(Hbs[1])
+    H3s = zeros(Float64, l, l)
+    if m < ls
+        for j in 1:l
+            if Hbs[j][m] < Na && Hbs[j][m+1] > 0
+                Hb_copy = copy(Hbs[j])
+                Hb_copy[m]::Int64 = Hbs[j][m] + 1
+                Hb_copy[m+1]::Int64 = Hbs[j][m+1] - 1
+                index::Int64 = findfirst(item -> item == Hb_copy, Hbs)
+                H3s[j, index] += sqrt((Hbs[j][m]+1)*Hbs[j][m+1])
+            end
+        end
+
+    elseif m == ls
+        for j in 1:l
+            if Hbs[j][m] < Na && Hbs[j][1] > 0
+                Hb_copy = copy(Hbs[j])
+                Hb_copy[m]::Int64 = Hbs[j][m] + 1
+                Hb_copy[1]::Int64 = Hbs[j][1] - 1
+                index::Int64 = findfirst(item -> item == Hb_copy, Hbs)
+                H3s[j, index] += sqrt((Hbs[j][m]+1)*Hbs[j][1])
+            end
         end
     end
     return H3s
