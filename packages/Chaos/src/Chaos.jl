@@ -3,7 +3,7 @@ module Chaos
 using LinearAlgebra
 using Combinatorics
 
-export integer_partition, hopping_pair, hopping_pair_pbc, average_spacing, state_evolution, state_evolution_random, reduced_density_matrix, evolution_number
+export integer_partition, hopping_pair, hopping_pair_pbc, average_spacing, state_evolution, state_evolution_modified, state_evolution_random, reduced_density_matrix, reduced_density_matrix_modified, evolution_number
 
 """
 This function will give partitions of m into at most n integers.
@@ -122,6 +122,19 @@ function state_evolution(;H::Matrix{Float64},t::Float64,basis::Vector{Vector{Int
     return vec(ψ_t)
 end
 
+function state_evolution_modified(;eigenvals::Vector{T},eigenvecs::Matrix{Float64},t::Float64,basis::Vector{Vector{Int64}},init::Vector{Int64}) where T <: Number
+    @assert t != 0.0
+    ind = findall(x->x==init, basis)[1]
+    len = length(eigenvals)
+    ψ_t = zeros(Float64, length(basis), 1)
+    for i in 1:len
+        vec = eigenvecs[:,i]
+        val = eigenvals[i]
+        ψ_t += conj(vec[ind])*exp(-im*val*t)*vec
+    end
+    return vec(ψ_t)
+end
+
 function state_evolution_random(;H::Matrix{Float64},t::Float64,basis::Vector{Vector{Int64}},init::Vector{T}) where T <: Number
     eigenvals = eigvals(H)
     eigenvecs = eigvecs(H)
@@ -177,6 +190,36 @@ function reduced_density_matrix(;state::Vector{T}, Na::Int64, Ls::Int64, Rd::Int
     end
     return rdmat
 end
+
+# Notice that this function only works in our paper i.e., triple-well system integrating out
+# the first site.
+function reduced_density_matrix_modified(;Na::Int64,state::Vector{T},Hbs::Vector{Vector{Int64}}) where T <: Number
+    @assert Na > 0
+
+    dmat = state*state' # the original density matrix
+    len = length(state)
+    rdmat = zeros(Complex, len, len) # initialize the reduced density matrix
+    
+    row_len = 0
+    for num in 0:Na
+        # these two list of indices is to locate
+        # the corresponding value in dmat
+        row_indices = findall(x->x[1]==num, Hbs)
+        col_indices = findall(x->x[3]==num, Hbs)
+        ind = row_indices[1]
+        row_len = length(row_indices)
+        dmat_values = []
+        for i in row_indices
+            for j in col_indices
+                push!(dmat_values, dmat[i,j])
+            end
+        end
+        dmat_values = reshape(dmat_values, row_len, row_len)
+        rdmat[ind:ind+row_len-1,ind:ind+row_len-1] = dmat_values
+    end
+    return rdmat
+end
+
 
 """
 This function will give the evolution of number of atoms at i-th site
